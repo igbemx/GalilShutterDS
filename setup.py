@@ -1,7 +1,7 @@
 #!/usr/bin/env python3 
 from setuptools import setup, find_packages
 setup(name = "GalilShutterDS",
-    version = "1.0.2",
+    version = "1.0.3",
     description = "Device server for the Galil motion controller based shutter at Softimax",
     author = "Igor Beinik",
     author_email = "igor.beinik@maxiv.lu.se",
