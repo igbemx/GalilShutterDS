@@ -7,7 +7,6 @@ setup(name = "GalilShutterDS",
     author_email = "igor.beinik@maxiv.lu.se",
     license = "GPLv3",
     url = "http://www.maxiv.lu.se",
-    package_dir = {'GalilShutter':'src'},
     packages = find_packages(),
     install_requires = ['pytango',],
     entry_points={
