@@ -11,8 +11,7 @@ setup(name = "GalilShutterDS",
     packages = find_packages(),
     install_requires = ['pytango',],
     entry_points={
-        'console_scripts': [
-            'SoftiGalilShutterDS = GalilShutter.GalilShutterDS(Device):main'
-
-        ]}
+            'console_scripts': [
+                'SoftiGalilShutterDS = GalilShutter.GalilShutterDS:main'
+            ]}
 )
