@@ -5,7 +5,7 @@ setup(name = "GalilShutter",
     version = "1.0.2",
 =======
 setup(name = "GalilShutterDS",
-    version = "1.0.3",
+    version = "1.0.4",
 >>>>>>> dd29cf6c4e27881fbe785bda5275f3fe232a8f76
     description = "Device server for the Galil motion controller based shutter at Softimax",
     author = "Igor Beinik",
