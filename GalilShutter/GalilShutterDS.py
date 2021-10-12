@@ -27,7 +27,7 @@ import time
 import numpy
 import sys
 import string
-import GalilShutter.gclib
+import GalilShutter.gclib as gclib
 import random
 # PROTECTED REGION END #    //  GalilShutterDS.additionnal_import
 
