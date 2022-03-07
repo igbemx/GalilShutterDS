@@ -1,6 +1,6 @@
 include:
   - project: 'kits-maxiv/cfg-maxiv-gitlabci'
-    ref: master
+    ref: develop
     file: '/.pythonds-ci.yml'
 
 build el7 pythonds 36:
