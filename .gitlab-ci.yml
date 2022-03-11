@@ -1,8 +1,5 @@
 include:
   - project: 'kits-maxiv/cfg-maxiv-gitlabci'
-    ref: master
-    file: '/.pythonds-ci.yml'
-
-build el7 pythonds 36:
-  variables:
-    PACKAGE_NAME: 'tangods-softimax-galilshutter'
+    file: '/.python-ci.yml'
+variables:
+  PACKAGE_NAME: 'tangods-softimax-galilshutter'
