@@ -78,6 +78,7 @@
         <type xsi:type="pogoDsl:VoidType"/>
       </argout>
       <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
+      <excludedStates>OPEN</excludedStates>
     </commands>
     <commands name="GalilSoftReset" description="Galil soft reset. Sends `RS` command to the controller." execMethod="galil_soft_reset" displayLevel="OPERATOR" polledPeriod="0" isDynamic="false">
       <argin description="">
@@ -117,6 +118,16 @@
       </argout>
       <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
       <excludedStates>MOVING</excludedStates>
+    </commands>
+    <commands name="SoftCtrl" description="Switches to software (via Tango) control of the shutter." execMethod="soft_ctrl" displayLevel="OPERATOR" polledPeriod="0" isDynamic="false">
+      <argin description="">
+        <type xsi:type="pogoDsl:VoidType"/>
+      </argin>
+      <argout description="">
+        <type xsi:type="pogoDsl:VoidType"/>
+      </argout>
+      <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
+      <excludedStates>OPEN</excludedStates>
     </commands>
     <attributes name="abs_position" attType="Scalar" rwType="READ_WRITE" displayLevel="OPERATOR" polledPeriod="0" maxX="" maxY="" allocReadMember="true" isDynamic="false">
       <dataType xsi:type="pogoDsl:LongType"/>

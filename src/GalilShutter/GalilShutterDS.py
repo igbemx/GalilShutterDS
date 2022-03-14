@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
 # This file is part of the GalilShutterDS project
@@ -24,10 +23,11 @@ from tango import AttrWriteType, PipeWriteType
 # Additional import
 # PROTECTED REGION ID(GalilShutterDS.additionnal_import) ENABLED START #
 import time
+import threading
 import numpy
 import sys
 import string
-import gclib
+import GalilShutter.gclib as gclib
 import random
 # PROTECTED REGION END #    //  GalilShutterDS.additionnal_import
 
@@ -48,6 +48,63 @@ class GalilShutterDS(Device):
             - Type:'DevShort'
     """
     # PROTECTED REGION ID(GalilShutterDS.class_variable) ENABLED START #
+    @DebugIt()
+    def _switch_to_ext_ctrl(self, close_pos=7500, open_pos=7000):
+        try:
+            print('Calling _switch_to_ext_ctrl..')
+            o_pos = int(open_pos)
+            c_pos = int(close_pos)
+            #self.program = '#A;JS#B,@IN[1]=0;JS#C,@IN[1]=1;JP#A;\n#B;PA7000;BGA;AMA;EN;\n#C;PA7500;BGA;AMA;EN'
+            self._init_motor()
+            print('Initializing the motor, please wait..')
+            program = f'#A;JS#B,@IN[1]=0;JS#C,@IN[1]=1;JP#A;\n#B;PA{o_pos};BGA;AMA;EN;\n#C;PA{c_pos};BGA;AMA;EN' # Enables OPEN/CLOSE via DI1
+            self.g.GProgramDownload(program, '--max 3')
+            self.g.GCommand('XQ')
+            time.sleep(2)
+            self.set_state(DevState.INSERT)
+            self._external_control = True
+        except Exception as e:
+            print('Error in _switch_to_ext_ctrl', e)
+            self.set_state(DevState.FAULT)
+            #self.g.GClose()
+
+    def _init_motor(self):
+        try:
+            program = '#A;ACA= 1000000;DCA= 1000000;SPA= 200000;SH A;EN' # Setting up the parameters and turning ON
+            self.g.GProgramDownload(program, '--max 3')
+            self.g.GCommand('XQ')
+            self.set_state(DevState.ON)
+        except Exception as e:
+            self.set_state(DevState.FAULT)
+            self.g.GClose()
+
+    def _stop_all(self):
+        self.g.GCommand('AB 0') #Abort motion and program operation
+        #self.g.GCommand('ST A')
+
+    def _open_shutter(self):
+        if self.get_state() not in [DevState.MOVING, DevState.OPEN]:
+            try:
+                self.set_state(DevState.MOVING)
+                #self.g.GCommand('PA4500')
+                self.g.GCommand('PA'+str(self._open_value))
+                self.g.GCommand('BG A')
+            except Exception as e:
+                #self.g.GClose()
+                self.set_state(DevState.FAULT)
+                print('Error in Open():', e)
+
+    def _close_shutter(self):
+        if self.get_state() not in [DevState.MOVING, DevState.CLOSE]:
+            try:
+                self.set_state(DevState.MOVING)
+                self.g.GCommand('PA'+str(self._close_value))
+                self.g.GCommand('BG A')
+            except Exception as e:
+                #self.g.GClose()
+                self.set_state(DevState.FAULT)
+                print('Error in Close()', e)
+        
     # PROTECTED REGION END #    //  GalilShutterDS.class_variable
 
     # -----------------
@@ -133,17 +190,20 @@ class GalilShutterDS(Device):
         self._offset = 2100
         self._external_control = False
         self.current_position = 0
-        self._open_value = 7300
+        self._open_value = 7000
         self._close_value = 7500
         self._closing_tolerance = 40
         try:
             self.g = gclib.py()
             print('gclib version:', self.g.GVersion())
+            self.g.GClose()
+            time.sleep(1)
             self.g.GOpen(self.host + ' --direct -s ALL')
-            print(self.g.GInfo())
+            print('The controller info during init: ', self.g.GInfo())
             self.current_position = int(self.g.GCommand('TP'))
             print('The current position is: ', self.current_position)
             self.set_state(DevState.STANDBY)
+            self._switch_to_ext_ctrl()
         except Exception as e:
             self.g.GClose()
             self.set_state(DevState.FAULT)
@@ -156,22 +216,44 @@ class GalilShutterDS(Device):
         try:
             self.current_position = int(self.g.GCommand('TP'))
             if abs(self.current_position - self._open_value) < self._closing_tolerance:
-                self.set_state(DevState.OPEN)
+                if self._external_control:
+                    self.set_state(DevState.INSERT)
+                else:
+                    self.set_state(DevState.OPEN)
             elif abs(self.current_position - self._close_value) < self._closing_tolerance:
-                self.set_state(DevState.CLOSE)
+                if self._external_control:
+                    self.set_state(DevState.INSERT)
+                else:
+                    self.set_state(DevState.CLOSE)
         except Exception as e:
-            print('There was an error in always_executed_hook', e)
+            print('There was an error in always_executed_hook:', e)
+            self.g.GClose()
+            print('Reopenning of the connection to the controller..')
+            self.g.GOpen(self.host + ' --direct -s ALL')
+            self.set_state(DevState.FAULT)
         # PROTECTED REGION END #    //  GalilShutterDS.always_executed_hook
 
-    def read_attr_hardware(self, attr_list):
-        try:
-            self.current_position = int(self.g.GCommand('TP'))
-            if abs(self.current_position - self._open_value) < self._closing_tolerance:
-                self.set_state(DevState.OPEN)
-            elif abs(self.current_position - self._close_value) < self._closing_tolerance:
-                self.set_state(DevState.CLOSE)
-        except Exception as e:
-            print('There was an error in always_executed_hook', e)
+    # PROTECTED REGION ID(GalilShutterDS.read_attr_hardware) ENABLED START #
+    # def read_attr_hardware(self):
+    #     print('Calling read_attr_hardware..')
+    #     """Method always executed before each reading of attributes."""
+    #     try:
+    #         self.current_position = int(self.g.GCommand('TP'))
+    #         print('read_attr_hardware call.., current posiontion is: ', self.current_position)
+    #         if abs(self.current_position - self._open_value) < self._closing_tolerance:
+    #             if self._external_control:
+    #                 self.set_state(DevState.INSERT)
+    #             else:
+    #                 self.set_state(DevState.OPEN)
+    #         elif abs(self.current_position - self._close_value) < self._closing_tolerance:
+    #             if self._external_control:
+    #                 self.set_state(DevState.INSERT)
+    #             else:
+    #                 self.set_state(DevState.CLOSE)
+    #     except Exception as e:
+    #         print('There was an error in read_attr_hardware:', e)
+    #         self.g.GClose()
+    #     # PROTECTED REGION END #    //  GalilShutterDS.read_attr_hardware
 
     def delete_device(self):
         """Hook to delete resources allocated in init_device.
@@ -267,17 +349,7 @@ class GalilShutterDS(Device):
 
         :return:None
         """
-        try:
-            self.g.GCommand('ST A')
-            self.program = '#A;ACA= 1000000;DCA= 1000000;SPA= 200000;SH A;EN' # Setting up the parameters and turning ON
-            self.g.GProgramDownload(self.program, '--max 3')
-            #print(' Uploaded program:\n%s' % self.g.GProgramUpload())
-            print('TurnOn response: ', self.g.GCommand('XQ'))
-            self.set_state(DevState.ON)
-        except gclib.GclibError as e:
-            self.g.GClose()
-            self.set_state(DevState.FAULT)
-            print('Unexpected GclibError:', e)
+        self._init_motor()
         # PROTECTED REGION END #    //  GalilShutterDS.TurnOn
 
     @command(
@@ -329,8 +401,10 @@ class GalilShutterDS(Device):
         :return:None
         """
         try:
-            self.program = '#A;ST;MO A;JG 5000;FI;SH A;BG A;EN' # Find index Galil program
-            self.g.GProgramDownload(self.program, '--max 3')
+            self._stop_all()
+            self._external_control = False
+            program = '#A;ST;MO A;JG 5000;FI;SH A;BG A;EN' # Find index Galil program
+            self.g.GProgramDownload(program, '--max 3')
             #print(' Uploaded program:\n%s' % self.g.GProgramUpload())
             print('FindIndex(): ', self.g.GCommand('XQ'))
             self.set_state(DevState.UNKNOWN)
@@ -354,17 +428,17 @@ class GalilShutterDS(Device):
 
         :return:None
         """
-        try:
-            self._external_control = True
-            self.program = '#A;JS#B,@IN[1]=0;JS#C,@IN[1]=1;JP#A;\n#B;PA7000;BGA;AMA;EN;\n#C;PA7500;BGA;AMA;EN' # Enables OPEN/CLOSE via DI1
-            self.g.GProgramDownload(self.program, '--max 3')
-            #print(' Uploaded program:\n%s' % self.g.GProgramUpload())
-            print('Switch to external control: ', self.g.GCommand('XQ'))
-            self.set_state(DevState.UNKNOWN)
-        except Exception as e:
-            self.set_state(DevState.FAULT)
-            print('Error in ExternalControl:', e)
+        # t = threading.Thread(target=self._switch_to_ext_ctrl,
+        #                     args=(self._close_value, self._open_value))
+        # t.setDaemon(True)
+        # t.start()
+        self._switch_to_ext_ctrl(self._close_value, self._open_value)
         # PROTECTED REGION END #    //  GalilShutterDS.ExternalControl
+
+    def is_ExternalControl_allowed(self):
+        # PROTECTED REGION ID(GalilShutterDS.is_ExternalControl_allowed) ENABLED START #
+        return self.get_state() not in [DevState.OPEN]
+        # PROTECTED REGION END #    //  GalilShutterDS.is_ExternalControl_allowed
 
     @command(
     )
@@ -431,20 +505,13 @@ class GalilShutterDS(Device):
 
         :return:None
         """
-        if self.get_state() not in [DevState.MOVING, DevState.OPEN]:
-            try:
-                self.set_state(DevState.MOVING)
-                #self.g.GCommand('PA4500')
-                self.g.GCommand('PA'+str(self._open_value))
-                self.g.GCommand('BG A')
-            except Exception as e:
-                #self.g.GClose()
-                self.set_state(DevState.FAULT)
-                print('Error in Open():', e)
+        self._open_shutter()
         # PROTECTED REGION END #    //  GalilShutterDS.Open
 
     def is_Open_allowed(self):
         # PROTECTED REGION ID(GalilShutterDS.is_Open_allowed) ENABLED START #
+        if self._external_control:
+            return False
         return self.get_state() not in [DevState.MOVING]
         # PROTECTED REGION END #    //  GalilShutterDS.is_Open_allowed
 
@@ -458,21 +525,35 @@ class GalilShutterDS(Device):
 
         :return:None
         """
-        if self.get_state() not in [DevState.MOVING, DevState.CLOSE]:
-            try:
-                self.set_state(DevState.MOVING)
-                self.g.GCommand('PA'+str(self._close_value))
-                self.g.GCommand('BG A')
-            except Exception as e:
-                #self.g.GClose()
-                self.set_state(DevState.FAULT)
-                print('Error in Close()', e)
+        self._close_shutter()
         # PROTECTED REGION END #    //  GalilShutterDS.Close
 
     def is_Close_allowed(self):
         # PROTECTED REGION ID(GalilShutterDS.is_Close_allowed) ENABLED START #
+        if self._external_control:
+            return False
         return self.get_state() not in [DevState.MOVING]
         # PROTECTED REGION END #    //  GalilShutterDS.is_Close_allowed
+
+    @command(
+    )
+    @DebugIt()
+    def SoftCtrl(self):
+        # PROTECTED REGION ID(GalilShutterDS.SoftCtrl) ENABLED START #
+        """
+        Switches to software (via Tango) control of the shutter.
+
+        :return:None
+        """
+        self._init_motor()
+        self._close_shutter()
+        self._external_control = False
+        # PROTECTED REGION END #    //  GalilShutterDS.SoftCtrl
+
+    def is_SoftCtrl_allowed(self):
+        # PROTECTED REGION ID(GalilShutterDS.is_SoftCtrl_allowed) ENABLED START #
+        return self.get_state() not in [DevState.OPEN]
+        # PROTECTED REGION END #    //  GalilShutterDS.is_SoftCtrl_allowed
 
 # ----------
 # Run server
