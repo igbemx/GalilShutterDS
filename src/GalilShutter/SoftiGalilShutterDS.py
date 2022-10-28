@@ -49,7 +49,7 @@ class GalilShutterDS(Device):
     """
     # PROTECTED REGION ID(GalilShutterDS.class_variable) ENABLED START #
     @DebugIt()
-    def _switch_to_ext_ctrl(self, close_pos=7500, open_pos=7000):
+    def _switch_to_ext_ctrl(self, close_pos=11500, open_pos=11000):
         try:
             print('Calling _switch_to_ext_ctrl..')
             o_pos = int(open_pos)
@@ -190,8 +190,8 @@ class GalilShutterDS(Device):
         self._offset = 2100
         self._external_control = False
         self.current_position = 0
-        self._open_value = 7000
-        self._close_value = 7500
+        self._open_value = 11000
+        self._close_value = 11500
         self._closing_tolerance = 40
         try:
             self.g = gclib.py()
