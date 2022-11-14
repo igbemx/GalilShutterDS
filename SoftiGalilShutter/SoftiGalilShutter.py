@@ -27,8 +27,7 @@ import threading
 import numpy
 import sys
 import string
-# import GalilShutter.gclib as gclib
-import gclib
+import SoftiGalilShutter.gclib as gclib
 import random
 # PROTECTED REGION END #    //  SoftiGalilShutter.additionnal_import
 
