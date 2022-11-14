@@ -8,15 +8,13 @@ setup(
     description="Device server for the Galil motion controller based shutter at Softimax",
     author="Igor Beinik",
     author_email="igor.beinik@maxiv.lu.se",
-    license="GPLv3",
     url="https://gitlab.maxiv.lu.se/igobei/tangods-softimax-galilshutter",
-    package_dir={"": "src"},
-    packages=find_packages(where="src"),
-    python_requires=">=3.6",
+    packages=find_packages(exclude=["tests", "*.tests.*", "tests.*", "scripts"]),
     install_requires=['pytango', ],
+    include_package_data=True,
     entry_points={
         'console_scripts': [
-            'SoftiGalilShutterDS = SoftiGalilShutterDS.GalilShutterDS:main',
+            'SoftiGalilShutter = SoftiGalilShutter.SoftiGalilShutter:main',
         ],
     },
 )

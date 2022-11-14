@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# This file is part of the GalilShutterDS project
+# This file is part of the SoftiGalilShutter project
 #
 #
 #
@@ -21,20 +21,20 @@ from tango.server import device_property
 from tango import AttrQuality, DispLevel, DevState
 from tango import AttrWriteType, PipeWriteType
 # Additional import
-# PROTECTED REGION ID(GalilShutterDS.additionnal_import) ENABLED START #
+# PROTECTED REGION ID(SoftiGalilShutter.additionnal_import) ENABLED START #
 import time
 import threading
 import numpy
 import sys
 import string
-import GalilShutter.gclib as gclib
+import SoftiGalilShutter.gclib as gclib
 import random
-# PROTECTED REGION END #    //  GalilShutterDS.additionnal_import
+# PROTECTED REGION END #    //  SoftiGalilShutter.additionnal_import
 
-__all__ = ["GalilShutterDS", "main"]
+__all__ = ["SoftiGalilShutter", "main"]
 
 
-class GalilShutterDS(Device):
+class SoftiGalilShutter(Device):
     """
 
     **Properties:**
@@ -47,9 +47,9 @@ class GalilShutterDS(Device):
             - Galil port number.
             - Type:'DevShort'
     """
-    # PROTECTED REGION ID(GalilShutterDS.class_variable) ENABLED START #
+    # PROTECTED REGION ID(SoftiGalilShutter.class_variable) ENABLED START #
     @DebugIt()
-    def _switch_to_ext_ctrl(self, close_pos=7500, open_pos=7000):
+    def _switch_to_ext_ctrl(self, close_pos=11500, open_pos=10900):
         try:
             print('Calling _switch_to_ext_ctrl..')
             o_pos = int(open_pos)
@@ -105,7 +105,7 @@ class GalilShutterDS(Device):
                 self.set_state(DevState.FAULT)
                 print('Error in Close()', e)
         
-    # PROTECTED REGION END #    //  GalilShutterDS.class_variable
+    # PROTECTED REGION END #    //  SoftiGalilShutter.class_variable
 
     # -----------------
     # Device Properties
@@ -183,15 +183,15 @@ class GalilShutterDS(Device):
     # ---------------
 
     def init_device(self):
-        """Initialises the attributes and properties of the GalilShutterDS."""
+        """Initialises the attributes and properties of the SoftiGalilShutter."""
         Device.init_device(self)
-        # PROTECTED REGION ID(GalilShutterDS.init_device) ENABLED START #
+        # PROTECTED REGION ID(SoftiGalilShutter.init_device) ENABLED START #
         self._abs_position = 0
         self._offset = 2100
         self._external_control = False
         self.current_position = 0
-        self._open_value = 7000
-        self._close_value = 7500
+        self._open_value = 10900
+        self._close_value = 11500
         self._closing_tolerance = 40
         try:
             self.g = gclib.py()
@@ -208,11 +208,11 @@ class GalilShutterDS(Device):
             self.g.GClose()
             self.set_state(DevState.FAULT)
             print('Error in init_device:', e)
-        # PROTECTED REGION END #    //  GalilShutterDS.init_device
+        # PROTECTED REGION END #    //  SoftiGalilShutter.init_device
 
     def always_executed_hook(self):
         """Method always executed before any TANGO command is executed."""
-        # PROTECTED REGION ID(GalilShutterDS.always_executed_hook) ENABLED START #
+        # PROTECTED REGION ID(SoftiGalilShutter.always_executed_hook) ENABLED START #
         try:
             self.current_position = int(self.g.GCommand('TP'))
             if abs(self.current_position - self._open_value) < self._closing_tolerance:
@@ -231,9 +231,9 @@ class GalilShutterDS(Device):
             print('Reopenning of the connection to the controller..')
             self.g.GOpen(self.host + ' --direct -s ALL')
             self.set_state(DevState.FAULT)
-        # PROTECTED REGION END #    //  GalilShutterDS.always_executed_hook
+        # PROTECTED REGION END #    //  SoftiGalilShutter.always_executed_hook
 
-    # PROTECTED REGION ID(GalilShutterDS.read_attr_hardware) ENABLED START #
+    # PROTECTED REGION ID(SoftiGalilShutter.read_attr_hardware) ENABLED START #
     # def read_attr_hardware(self):
     #     print('Calling read_attr_hardware..')
     #     """Method always executed before each reading of attributes."""
@@ -253,7 +253,7 @@ class GalilShutterDS(Device):
     #     except Exception as e:
     #         print('There was an error in read_attr_hardware:', e)
     #         self.g.GClose()
-    #     # PROTECTED REGION END #    //  GalilShutterDS.read_attr_hardware
+    #     # PROTECTED REGION END #    //  SoftiGalilShutter.read_attr_hardware
 
     def delete_device(self):
         """Hook to delete resources allocated in init_device.
@@ -262,78 +262,78 @@ class GalilShutterDS(Device):
         init_device method to be released.  This method is called by the device
         destructor and by the device Init command.
         """
-        # PROTECTED REGION ID(GalilShutterDS.delete_device) ENABLED START #
+        # PROTECTED REGION ID(SoftiGalilShutter.delete_device) ENABLED START #
         self.g.GClose()
-        # PROTECTED REGION END #    //  GalilShutterDS.delete_device
+        # PROTECTED REGION END #    //  SoftiGalilShutter.delete_device
     # ------------------
     # Attributes methods
     # ------------------
 
     def read_abs_position(self):
-        # PROTECTED REGION ID(GalilShutterDS.abs_position_read) ENABLED START #
+        # PROTECTED REGION ID(SoftiGalilShutter.abs_position_read) ENABLED START #
         """Return the abs_position attribute."""
         return self.current_position
-        # PROTECTED REGION END #    //  GalilShutterDS.abs_position_read
+        # PROTECTED REGION END #    //  SoftiGalilShutter.abs_position_read
 
     def write_abs_position(self, value):
-        # PROTECTED REGION ID(GalilShutterDS.abs_position_write) ENABLED START #
+        # PROTECTED REGION ID(SoftiGalilShutter.abs_position_write) ENABLED START #
         """Set the abs_position attribute."""
         pass
-        # PROTECTED REGION END #    //  GalilShutterDS.abs_position_write
+        # PROTECTED REGION END #    //  SoftiGalilShutter.abs_position_write
 
     def read_offset(self):
-        # PROTECTED REGION ID(GalilShutterDS.offset_read) ENABLED START #
+        # PROTECTED REGION ID(SoftiGalilShutter.offset_read) ENABLED START #
         """Return the offset attribute."""
         return self._offset
-        # PROTECTED REGION END #    //  GalilShutterDS.offset_read
+        # PROTECTED REGION END #    //  SoftiGalilShutter.offset_read
 
     def write_offset(self, value):
-        # PROTECTED REGION ID(GalilShutterDS.offset_write) ENABLED START #
+        # PROTECTED REGION ID(SoftiGalilShutter.offset_write) ENABLED START #
         """Set the offset attribute."""
         pass
-        # PROTECTED REGION END #    //  GalilShutterDS.offset_write
+        # PROTECTED REGION END #    //  SoftiGalilShutter.offset_write
 
     def read_external_control(self):
-        # PROTECTED REGION ID(GalilShutterDS.external_control_read) ENABLED START #
+        # PROTECTED REGION ID(SoftiGalilShutter.external_control_read) ENABLED START #
         """Return the external_control attribute."""
         return self._external_control
-        # PROTECTED REGION END #    //  GalilShutterDS.external_control_read
+        # PROTECTED REGION END #    //  SoftiGalilShutter.external_control_read
 
     def read_open_value(self):
-        # PROTECTED REGION ID(GalilShutterDS.open_value_read) ENABLED START #
+        # PROTECTED REGION ID(SoftiGalilShutter.open_value_read) ENABLED START #
         """Return the open_value attribute."""
         return self._open_value
-        # PROTECTED REGION END #    //  GalilShutterDS.open_value_read
+        # PROTECTED REGION END #    //  SoftiGalilShutter.open_value_read
 
     def write_open_value(self, value):
-        # PROTECTED REGION ID(GalilShutterDS.open_value_write) ENABLED START #
+        # PROTECTED REGION ID(SoftiGalilShutter.open_value_write) ENABLED START #
         """Set the open_value attribute."""
         self._open_value = value
-        # PROTECTED REGION END #    //  GalilShutterDS.open_value_write
+        # PROTECTED REGION END #    //  SoftiGalilShutter.open_value_write
 
     def read_close_value(self):
-        # PROTECTED REGION ID(GalilShutterDS.close_value_read) ENABLED START #
+        # PROTECTED REGION ID(SoftiGalilShutter.close_value_read) ENABLED START #
         """Return the close_value attribute."""
         return self._close_value
-        # PROTECTED REGION END #    //  GalilShutterDS.close_value_read
+        # PROTECTED REGION END #    //  SoftiGalilShutter.close_value_read
 
     def write_close_value(self, value):
-        # PROTECTED REGION ID(GalilShutterDS.close_value_write) ENABLED START #
+        # PROTECTED REGION ID(SoftiGalilShutter.close_value_write) ENABLED START #
         """Set the close_value attribute."""
         self._close_value = value
-        # PROTECTED REGION END #    //  GalilShutterDS.close_value_write
+        # PROTECTED REGION END #    //  SoftiGalilShutter.close_value_write
 
     def read_closing_tolerance(self):
-        # PROTECTED REGION ID(GalilShutterDS.closing_tolerance_read) ENABLED START #
+        # PROTECTED REGION ID(SoftiGalilShutter.closing_tolerance_read) ENABLED START #
         """Return the closing_tolerance attribute."""
         return self._closing_tolerance
-        # PROTECTED REGION END #    //  GalilShutterDS.closing_tolerance_read
+        # PROTECTED REGION END #    //  SoftiGalilShutter.closing_tolerance_read
 
     def write_closing_tolerance(self, value):
-        # PROTECTED REGION ID(GalilShutterDS.closing_tolerance_write) ENABLED START #
+        # PROTECTED REGION ID(SoftiGalilShutter.closing_tolerance_write) ENABLED START #
         """Set the closing_tolerance attribute."""
         self._closing_tolerance = value
-        # PROTECTED REGION END #    //  GalilShutterDS.closing_tolerance_write
+        # PROTECTED REGION END #    //  SoftiGalilShutter.closing_tolerance_write
 
     # --------
     # Commands
@@ -343,20 +343,20 @@ class GalilShutterDS(Device):
     )
     @DebugIt()
     def TurnOn(self):
-        # PROTECTED REGION ID(GalilShutterDS.TurnOn) ENABLED START #
+        # PROTECTED REGION ID(SoftiGalilShutter.TurnOn) ENABLED START #
         """
         Turn the motor on.
 
         :return:None
         """
         self._init_motor()
-        # PROTECTED REGION END #    //  GalilShutterDS.TurnOn
+        # PROTECTED REGION END #    //  SoftiGalilShutter.TurnOn
 
     @command(
     )
     @DebugIt()
     def TurnOff(self):
-        # PROTECTED REGION ID(GalilShutterDS.TurnOff) ENABLED START #
+        # PROTECTED REGION ID(SoftiGalilShutter.TurnOff) ENABLED START #
         """
         Turn the motor off.
 
@@ -370,13 +370,13 @@ class GalilShutterDS(Device):
             self.g.GClose()
             self.set_state(DevState.FAULT)
             print('Error in TurnOff(): ', e)
-        # PROTECTED REGION END #    //  GalilShutterDS.TurnOff
+        # PROTECTED REGION END #    //  SoftiGalilShutter.TurnOff
 
     @command(
     )
     @DebugIt()
     def StopMotor(self):
-        # PROTECTED REGION ID(GalilShutterDS.StopMotor) ENABLED START #
+        # PROTECTED REGION ID(SoftiGalilShutter.StopMotor) ENABLED START #
         """
         Stop motor.
 
@@ -388,13 +388,13 @@ class GalilShutterDS(Device):
         except gclib.GclibError as e:
             self.set_state(DevState.FAULT)
             print('Unexpected GclibError:', e)
-        # PROTECTED REGION END #    //  GalilShutterDS.StopMotor
+        # PROTECTED REGION END #    //  SoftiGalilShutter.StopMotor
 
     @command(
     )
     @DebugIt()
     def FindIndex(self):
-        # PROTECTED REGION ID(GalilShutterDS.FindIndex) ENABLED START #
+        # PROTECTED REGION ID(SoftiGalilShutter.FindIndex) ENABLED START #
         """
         Find the index mark on the encoder.
 
@@ -411,18 +411,18 @@ class GalilShutterDS(Device):
         except Exception as e:
             self.set_state(DevState.FAULT)
             print('Error in FindIndex():', e)
-        # PROTECTED REGION END #    //  GalilShutterDS.FindIndex
+        # PROTECTED REGION END #    //  SoftiGalilShutter.FindIndex
 
     def is_FindIndex_allowed(self):
-        # PROTECTED REGION ID(GalilShutterDS.is_FindIndex_allowed) ENABLED START #
+        # PROTECTED REGION ID(SoftiGalilShutter.is_FindIndex_allowed) ENABLED START #
         return self.get_state() not in [DevState.MOVING]
-        # PROTECTED REGION END #    //  GalilShutterDS.is_FindIndex_allowed
+        # PROTECTED REGION END #    //  SoftiGalilShutter.is_FindIndex_allowed
 
     @command(
     )
     @DebugIt()
     def ExternalControl(self):
-        # PROTECTED REGION ID(GalilShutterDS.ExternalControl) ENABLED START #
+        # PROTECTED REGION ID(SoftiGalilShutter.ExternalControl) ENABLED START #
         """
         Switch to hardware control input. Shutter is controlled from one of the digital inputs.
 
@@ -433,18 +433,18 @@ class GalilShutterDS(Device):
         # t.setDaemon(True)
         # t.start()
         self._switch_to_ext_ctrl(self._close_value, self._open_value)
-        # PROTECTED REGION END #    //  GalilShutterDS.ExternalControl
+        # PROTECTED REGION END #    //  SoftiGalilShutter.ExternalControl
 
     def is_ExternalControl_allowed(self):
-        # PROTECTED REGION ID(GalilShutterDS.is_ExternalControl_allowed) ENABLED START #
+        # PROTECTED REGION ID(SoftiGalilShutter.is_ExternalControl_allowed) ENABLED START #
         return self.get_state() not in [DevState.OPEN]
-        # PROTECTED REGION END #    //  GalilShutterDS.is_ExternalControl_allowed
+        # PROTECTED REGION END #    //  SoftiGalilShutter.is_ExternalControl_allowed
 
     @command(
     )
     @DebugIt()
     def GalilSoftReset(self):
-        # PROTECTED REGION ID(GalilShutterDS.GalilSoftReset) ENABLED START #
+        # PROTECTED REGION ID(SoftiGalilShutter.GalilSoftReset) ENABLED START #
         """
         Galil soft reset. Sends `RS` command to the controller.
 
@@ -457,12 +457,12 @@ class GalilShutterDS(Device):
             self.g.GClose()
             self.set_state(DevState.FAULT)
             print('Error in GalilSoftReset: ', e)
-        # PROTECTED REGION END #    //  GalilShutterDS.GalilSoftReset
+        # PROTECTED REGION END #    //  SoftiGalilShutter.GalilSoftReset
 
     def is_GalilSoftReset_allowed(self):
-        # PROTECTED REGION ID(GalilShutterDS.is_GalilSoftReset_allowed) ENABLED START #
+        # PROTECTED REGION ID(SoftiGalilShutter.is_GalilSoftReset_allowed) ENABLED START #
         return self.get_state() not in [DevState.MOVING]
-        # PROTECTED REGION END #    //  GalilShutterDS.is_GalilSoftReset_allowed
+        # PROTECTED REGION END #    //  SoftiGalilShutter.is_GalilSoftReset_allowed
 
     @command(
         dtype_in='DevString',
@@ -472,7 +472,7 @@ class GalilShutterDS(Device):
     )
     @DebugIt()
     def SingleCommandInput(self, argin):
-        # PROTECTED REGION ID(GalilShutterDS.SingleCommandInput) ENABLED START #
+        # PROTECTED REGION ID(SoftiGalilShutter.SingleCommandInput) ENABLED START #
         """
 
         :param argin: 'DevString'
@@ -493,53 +493,53 @@ class GalilShutterDS(Device):
             self.set_state(DevState.FAULT)
             print('Error in SingleCommandInput():', e)
             return False
-        # PROTECTED REGION END #    //  GalilShutterDS.SingleCommandInput
+        # PROTECTED REGION END #    //  SoftiGalilShutter.SingleCommandInput
 
     @command(
     )
     @DebugIt()
     def Open(self):
-        # PROTECTED REGION ID(GalilShutterDS.Open) ENABLED START #
+        # PROTECTED REGION ID(SoftiGalilShutter.Open) ENABLED START #
         """
         Opens the shutter.
 
         :return:None
         """
         self._open_shutter()
-        # PROTECTED REGION END #    //  GalilShutterDS.Open
+        # PROTECTED REGION END #    //  SoftiGalilShutter.Open
 
     def is_Open_allowed(self):
-        # PROTECTED REGION ID(GalilShutterDS.is_Open_allowed) ENABLED START #
+        # PROTECTED REGION ID(SoftiGalilShutter.is_Open_allowed) ENABLED START #
         if self._external_control:
             return False
         return self.get_state() not in [DevState.MOVING]
-        # PROTECTED REGION END #    //  GalilShutterDS.is_Open_allowed
+        # PROTECTED REGION END #    //  SoftiGalilShutter.is_Open_allowed
 
     @command(
     )
     @DebugIt()
     def Close(self):
-        # PROTECTED REGION ID(GalilShutterDS.Close) ENABLED START #
+        # PROTECTED REGION ID(SoftiGalilShutter.Close) ENABLED START #
         """
         Closes the shutter.
 
         :return:None
         """
         self._close_shutter()
-        # PROTECTED REGION END #    //  GalilShutterDS.Close
+        # PROTECTED REGION END #    //  SoftiGalilShutter.Close
 
     def is_Close_allowed(self):
-        # PROTECTED REGION ID(GalilShutterDS.is_Close_allowed) ENABLED START #
+        # PROTECTED REGION ID(SoftiGalilShutter.is_Close_allowed) ENABLED START #
         if self._external_control:
             return False
         return self.get_state() not in [DevState.MOVING]
-        # PROTECTED REGION END #    //  GalilShutterDS.is_Close_allowed
+        # PROTECTED REGION END #    //  SoftiGalilShutter.is_Close_allowed
 
     @command(
     )
     @DebugIt()
     def SoftCtrl(self):
-        # PROTECTED REGION ID(GalilShutterDS.SoftCtrl) ENABLED START #
+        # PROTECTED REGION ID(SoftiGalilShutter.SoftCtrl) ENABLED START #
         """
         Switches to software (via Tango) control of the shutter.
 
@@ -548,12 +548,12 @@ class GalilShutterDS(Device):
         self._init_motor()
         self._close_shutter()
         self._external_control = False
-        # PROTECTED REGION END #    //  GalilShutterDS.SoftCtrl
+        # PROTECTED REGION END #    //  SoftiGalilShutter.SoftCtrl
 
     def is_SoftCtrl_allowed(self):
-        # PROTECTED REGION ID(GalilShutterDS.is_SoftCtrl_allowed) ENABLED START #
+        # PROTECTED REGION ID(SoftiGalilShutter.is_SoftCtrl_allowed) ENABLED START #
         return self.get_state() not in [DevState.OPEN]
-        # PROTECTED REGION END #    //  GalilShutterDS.is_SoftCtrl_allowed
+        # PROTECTED REGION END #    //  SoftiGalilShutter.is_SoftCtrl_allowed
 
 # ----------
 # Run server
@@ -561,10 +561,10 @@ class GalilShutterDS(Device):
 
 
 def main(args=None, **kwargs):
-    """Main function of the GalilShutterDS module."""
-    # PROTECTED REGION ID(GalilShutterDS.main) ENABLED START #
-    return run((GalilShutterDS,), args=args, **kwargs)
-    # PROTECTED REGION END #    //  GalilShutterDS.main
+    """Main function of the SoftiGalilShutter module."""
+    # PROTECTED REGION ID(SoftiGalilShutter.main) ENABLED START #
+    return run((SoftiGalilShutter,), args=args, **kwargs)
+    # PROTECTED REGION END #    //  SoftiGalilShutter.main
 
 
 if __name__ == '__main__':
