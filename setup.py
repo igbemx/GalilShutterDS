@@ -1,26 +1,22 @@
 #!/usr/bin/env python3.6
-import setuptools
+from setuptools import setup, find_packages
 
-with open("README.md", "r", encoding="utf-8") as fh:
-    long_description = fh.read()
-
-setuptools.setup(
-    name="GalilShutterDS",
-    version="1.0.11",
+setup(
+    name="tangods-softimax-galilshutter",
+    use_scm_version=True,
+    setup_requires=["setuptools_scm"],
     description="Device server for the Galil motion controller based shutter at Softimax",
-    long_description=long_description,
-    long_description_content_type="text/markdown",
     author="Igor Beinik",
     author_email="igor.beinik@maxiv.lu.se",
     license="GPLv3",
     url="https://gitlab.maxiv.lu.se/igobei/tangods-softimax-galilshutter",
     package_dir={"": "src"},
-    packages=setuptools.find_packages(where="src"),
+    packages=find_packages(where="src"),
     python_requires=">=3.6",
     install_requires=['pytango', ],
     entry_points={
         'console_scripts': [
-            'SoftiGalilShutterDS = GalilShutter.GalilShutterDS:main',
+            'SoftiGalilShutterDS = SoftiGalilShutterDS.GalilShutterDS:main',
         ],
     },
 )
