@@ -115,3 +115,4 @@ dmypy.json
 .pyre/
 
 .zhistory
+_version.py
