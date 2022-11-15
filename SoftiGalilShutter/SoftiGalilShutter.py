@@ -49,7 +49,7 @@ class SoftiGalilShutter(Device):
     """
     # PROTECTED REGION ID(SoftiGalilShutter.class_variable) ENABLED START #
     @DebugIt()
-    def _switch_to_ext_ctrl(self, close_pos=11500, open_pos=10900):
+    def _switch_to_ext_ctrl(self, close_pos=7500, open_pos=7000):
         try:
             print('Calling _switch_to_ext_ctrl..')
             o_pos = int(open_pos)
