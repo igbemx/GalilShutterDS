@@ -28,8 +28,10 @@ from threading import Thread
 import numpy
 import sys
 import string
-# import gclib
-import SoftiGalilShutter.gclib
+if __name__ == '__main__':
+    import gclib
+else:
+    import SoftiGalilShutter.gclib as gclib
 
 # PROTECTED REGION END #    //  SoftiGalilShutter.additionnal_import
 
