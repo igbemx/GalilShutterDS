@@ -28,8 +28,8 @@ from threading import Thread
 import numpy
 import sys
 import string
-import gclib
-# import SoftiGalilShutter.gclib
+# import gclib
+import SoftiGalilShutter.gclib
 
 # PROTECTED REGION END #    //  SoftiGalilShutter.additionnal_import
 
