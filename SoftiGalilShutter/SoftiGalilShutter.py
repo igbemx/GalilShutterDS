@@ -23,12 +23,14 @@ from tango import AttrWriteType, PipeWriteType
 # Additional import
 # PROTECTED REGION ID(SoftiGalilShutter.additionnal_import) ENABLED START #
 import time
-import threading
+import logging
+from threading import Thread
 import numpy
 import sys
 import string
-import SoftiGalilShutter.gclib as gclib
-import random
+# import gclib
+import SoftiGalilShutter.gclib
+
 # PROTECTED REGION END #    //  SoftiGalilShutter.additionnal_import
 
 __all__ = ["SoftiGalilShutter", "main"]
@@ -49,24 +51,24 @@ class SoftiGalilShutter(Device):
     """
     # PROTECTED REGION ID(SoftiGalilShutter.class_variable) ENABLED START #
     @DebugIt()
-    def _switch_to_ext_ctrl(self, close_pos=11500, open_pos=10900):
+    def _switch_to_ext_ctrl(self, close_pos=7500, open_pos=7000):
         try:
             print('Calling _switch_to_ext_ctrl..')
             o_pos = int(open_pos)
             c_pos = int(close_pos)
-            #self.program = '#A;JS#B,@IN[1]=0;JS#C,@IN[1]=1;JP#A;\n#B;PA7000;BGA;AMA;EN;\n#C;PA7500;BGA;AMA;EN'
+            # self.program = '#A;JS#B,@IN[1]=0;JS#C,@IN[1]=1;JP#A;\n#B;PA7000;BGA;AMA;EN;\n#C;PA7500;BGA;AMA;EN'
             self._init_motor()
             print('Initializing the motor, please wait..')
             program = f'#A;JS#B,@IN[1]=0;JS#C,@IN[1]=1;JP#A;\n#B;PA{o_pos};BGA;AMA;EN;\n#C;PA{c_pos};BGA;AMA;EN' # Enables OPEN/CLOSE via DI1
             self.g.GProgramDownload(program, '--max 3')
             self.g.GCommand('XQ')
-            time.sleep(2)
+            # time.sleep(2)
             self.set_state(DevState.INSERT)
             self._external_control = True
         except Exception as e:
-            print('Error in _switch_to_ext_ctrl', e)
+            print(f'Error in _switch_to_ext_ctrl{e}')
             self.set_state(DevState.FAULT)
-            #self.g.GClose()
+            self.g.GClose()
 
     def _init_motor(self):
         try:
@@ -75,6 +77,7 @@ class SoftiGalilShutter(Device):
             self.g.GCommand('XQ')
             self.set_state(DevState.ON)
         except Exception as e:
+            print(f'Error in _init_motor(): {e}')
             self.set_state(DevState.FAULT)
             self.g.GClose()
 
@@ -190,8 +193,8 @@ class SoftiGalilShutter(Device):
         self._offset = 2100
         self._external_control = False
         self.current_position = 0
-        self._open_value = 10900
-        self._close_value = 11500
+        self._open_value = 7000
+        self._close_value = 7500
         self._closing_tolerance = 40
         try:
             self.g = gclib.py()
@@ -203,11 +206,14 @@ class SoftiGalilShutter(Device):
             self.current_position = int(self.g.GCommand('TP'))
             print('The current position is: ', self.current_position)
             self.set_state(DevState.STANDBY)
-            self._switch_to_ext_ctrl()
+            self._switch_to_ext_ctrl(
+                close_pos=self._close_value,
+                open_pos=self._open_value
+            )
         except Exception as e:
             self.g.GClose()
             self.set_state(DevState.FAULT)
-            print('Error in init_device:', e)
+            print(f'Error in init_device: {e}')
         # PROTECTED REGION END #    //  SoftiGalilShutter.init_device
 
     def always_executed_hook(self):
@@ -226,8 +232,9 @@ class SoftiGalilShutter(Device):
                 else:
                     self.set_state(DevState.CLOSE)
         except Exception as e:
-            print('There was an error in always_executed_hook:', e)
+            print(f'There was an exception in always_executed_hook: {e}')
             self.g.GClose()
+            time.sleep(1)
             print('Reopenning of the connection to the controller..')
             self.g.GOpen(self.host + ' --direct -s ALL')
             self.set_state(DevState.FAULT)
@@ -428,11 +435,14 @@ class SoftiGalilShutter(Device):
 
         :return:None
         """
-        # t = threading.Thread(target=self._switch_to_ext_ctrl,
-        #                     args=(self._close_value, self._open_value))
-        # t.setDaemon(True)
-        # t.start()
-        self._switch_to_ext_ctrl(self._close_value, self._open_value)
+        try:
+            # self.t = Thread(target=self._switch_to_ext_ctrl,
+            #                         args=(self._close_value, self._open_value))
+            # self.t.setDaemon(True)
+            # self.t.start()
+            self._switch_to_ext_ctrl(self._close_value, self._open_value)
+        except Exception as e:
+            print(f"Error in the external control switch: {e}")
         # PROTECTED REGION END #    //  SoftiGalilShutter.ExternalControl
 
     def is_ExternalControl_allowed(self):
