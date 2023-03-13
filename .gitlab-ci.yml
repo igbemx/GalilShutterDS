@@ -1,5 +1,8 @@
 include:
   - project: 'kits-maxiv/cfg-maxiv-gitlabci'
     file: '/.python-ci.yml'
+
 variables:
-  PACKAGE_NAME: 'tangods-softimax-galilshutter'
+  RPM_ENABLED: 'false'
+  DEPLOY_HOSTS: b-v-softimax-ec-3
+  DEPLOY_TANGO_DS_NAME: SoftiGalilShutter
